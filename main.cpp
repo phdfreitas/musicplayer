@@ -104,9 +104,16 @@ int main(int argc, char const *argv[]){
 	}
 	closedir(dir);
 
-	printw("=-=-=-=-= Sua Playlist =-=-=-=-=-=\n");
+	move(0, 0);
+	y1 = numLinhas, x1 = numColunas;
+	win1 = newwin(y1, x1, y0, x0);
+	box(win1, '|', '*');
+	wrefresh(win1);
+
+	move(2, 2);
+	printw("=-=-= Sua Playlist =-=-=\n");
 	for (int i = 0; i < music; i++){
-		printw("%d - %s\n", (i+1), nomeMusicas[i]);
+		mvprintw(2 + 1 + i, 2, "%d - %s\n", (i+1), nomeMusicas[i]);
 	}
 	
 	refresh(); 
@@ -114,8 +121,9 @@ int main(int argc, char const *argv[]){
 	// Basicamente, enquanto for "True", leia chamadas do usuário
 	while(exec){
 		bool atual = true; // Controla o tempo de execução da música atual
-
+		int next;
 		int entrada = getch(); // Guarda o valor digitado pelo usuário
+		
 		switch(entrada){
 			case 'P':
 				playlistControl = music;
@@ -126,16 +134,39 @@ int main(int argc, char const *argv[]){
 				Mix_OpenAudio(frequency, format, channel, buffer);
 
 				while(music < playlistControl){ // Enquanto houver música na fila de reprodução
-					song = Mix_LoadWAV(playlist[music]); // Pega a música atual
+					
+					if(next != 'S' && next != 'R'){
+						song = Mix_LoadWAV(playlist[music]); // Pega a música atual
+						Mix_PlayChannel(-1, song, 0);
+					}
 
-					Mix_PlayChannel(-1, song, 0); // E configura para reproduzir apenas uma vez
+					next = getch(); // Usado para caso o usuário queira pula a música atual.
 
-					int next = getch(); // Usado para caso o usuário queira pula a música atual.
-
-					Mix_FreeChunk(song); // "Libera" a música atual
-					music++; // vai para a próxima música
+					if(next == 'B'){
+						if(music > 0){
+							music--; // vai para a próxima música	
+							Mix_FreeChunk(song);
+						}
+					}
+					else if(next == 'N'){
+						music++; // vai para a próxima música
+						Mix_FreeChunk(song);
+					}
+					else if(next == 'S'){
+						if(Mix_Playing(-1)){
+							Mix_Pause(-1);
+						}
+					}
+					else if(next == 'R'){
+						if(Mix_Paused(-1)){
+							Mix_Resume(-1);
+						}
+					}
 				}
 		  		printw("\nSua playlist terminou. Se quiser recomeçar essa, pressione P.\nE se quiser sair, pressione E.");
+				break;
+			case 'D':
+				
 				break;
 		  	case 'E': // Para sair do programa.
 		  	printw("Bye bye!\n");

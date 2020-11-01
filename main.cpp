@@ -122,8 +122,9 @@ int main(int argc, char const *argv[]){
 	while(exec){
 		bool atual = true; // Controla o tempo de execução da música atual
 		int next;
+		int del;
 		int entrada = getch(); // Guarda o valor digitado pelo usuário
-		
+
 		switch(entrada){
 			case 'P':
 				playlistControl = music;
@@ -166,7 +167,23 @@ int main(int argc, char const *argv[]){
 		  		printw("\nSua playlist terminou. Se quiser recomeçar essa, pressione P.\nE se quiser sair, pressione E.");
 				break;
 			case 'D':
-				
+				char musicaDelete[100];
+				getstr(musicaDelete);
+
+				playlistControl = music;
+
+				for (int i = 0; i < playlistControl; i++){
+					if(strcmp(musicaDelete,nomeMusicas[i]) == 0){
+						strcpy(playlist[i], "");
+						strcpy(nomeMusicas[i], "");
+						music--;
+					}
+				}
+
+				printw("=-=-= Sua Playlist =-=-=\n");
+				for (int i = 0; i < music; i++){
+					printw("%d - %s\n", (i+1), nomeMusicas[i]);
+				}
 				break;
 		  	case 'E': // Para sair do programa.
 		  	printw("Bye bye!\n");

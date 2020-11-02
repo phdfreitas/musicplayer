@@ -37,12 +37,19 @@ void *printPlaylist(void *arg){
 	pthread_exit(NULL);
 }
 
+void *deleteSong(void *arg){
+	
+	char * toDelete = (char *)arg;
+	strcpy(toDelete, "");
+	pthread_exit(NULL);
+}
+
 int main(int argc, char const *argv[]){
 	
-	char playlist[1000][1000]; // Irá guardar o nome/caminho das músicas. 
-						   // Será realmente a nossa playlist
+	char playlist[1000][1000]; 
+	char nomeMusicas[1000][1000];
 
-	char nomeMusicas[1000][1000];	
+	pthread_t threadDelete[2];	
 	
 	DIR *dir;
 	struct dirent *sdirent;
@@ -136,7 +143,9 @@ int main(int argc, char const *argv[]){
 
 				while(music < playlistControl){ // Enquanto houver música na fila de reprodução
 					
-					if(next != 'S' && next != 'R'){
+					printw("O total de músicas é: %d\n", playlistControl);
+
+					if(next != 'S' && next != 'R' || next == 'Y'){
 						song = Mix_LoadWAV(playlist[music]); // Pega a música atual
 						Mix_PlayChannel(-1, song, 0);
 					}
@@ -145,13 +154,13 @@ int main(int argc, char const *argv[]){
 
 					if(next == 'B'){
 						if(music > 0){
-							music--; // vai para a próxima música	
 							Mix_FreeChunk(song);
+							music--; // vai para a próxima música	
 						}
 					}
 					else if(next == 'N'){
-						music++; // vai para a próxima música
 						Mix_FreeChunk(song);
+						music++; // vai para a próxima música
 					}
 					else if(next == 'S'){
 						if(Mix_Playing(-1)){
@@ -161,6 +170,27 @@ int main(int argc, char const *argv[]){
 					else if(next == 'R'){
 						if(Mix_Paused(-1)){
 							Mix_Resume(-1);
+						}
+					}
+					else if(next == 'D'){
+						char musicaDelete[100];
+						getstr(musicaDelete);
+
+						for (int i = 0; i < playlistControl; i++){
+							if(strcmp(musicaDelete,nomeMusicas[i]) == 0){
+								
+								Mix_FreeChunk(song);
+								if(i == music) music++;
+								
+								pthread_create(&threadDelete[0], NULL, deleteSong, playlist[i]);
+								pthread_create(&threadDelete[1], NULL, deleteSong, nomeMusicas[i]);
+								pthread_join(*threadDelete, NULL);
+							}
+						}
+
+						printw("=-=-= Sua Playlist =-=-=\n");
+						for (int i = 0; i < playlistControl; i++){
+							printw("%d - %s\n", (i+1), nomeMusicas[i]);
 						}
 					}
 				}

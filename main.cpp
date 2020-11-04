@@ -27,18 +27,9 @@ using namespace std;
 	int playlistControl = 0;
 // Fim
 
-// Função para usar a PThread
-// Basicamente nessa 1ª entrega só foi usada para imprimir a playlist
-void *printPlaylist(void *arg){
 
-	char * atual = (char *)arg;
-
-	printw("%s\n", atual);
-	pthread_exit(NULL);
-}
-
+// Função que permite excluir uma música da playlist após a mesma já ter iniciado
 void *deleteSong(void *arg){
-	
 	char * toDelete = (char *)arg;
 	strcpy(toDelete, "");
 	pthread_exit(NULL);
@@ -46,44 +37,53 @@ void *deleteSong(void *arg){
 
 int main(int argc, char const *argv[]){
 	
-	char playlist[1000][1000]; 
-	char nomeMusicas[1000][1000];
+	char playlist[1000][1000]; // Guarda o caminho completo da música
+	char nomeMusicas[1000][1000]; // Guarda o nome da música (Fins de retorno ao usuário)
 
-	pthread_t threadDelete[2];	
+	pthread_t threadDelete[2]; // Usaremos para pode excluir a música enquanto a playlist rola	
 	
+	// Nos permite pegar todos os arquivos de um diretório
 	DIR *dir;
 	struct dirent *sdirent;
 	
-	
+	//iniciar a tela
 	initscr();
+	//tamanho das telas
+	int height,width,start_y,start_x;
+	height=30;
+	width=100;
+	start_y = 10;
+	start_x = 20;
+	//iniciando a tela incial
+	WINDOW * win = newwin(height, width, start_y,start_x);
+	//refresh na tela
+	refresh();
+	//adicionando uma borda
+	box(win,0,0);
+	mvwprintw(win,0,45,"Play Music");
+	//refresh na tela win1
+	wrefresh(win);
+	//printar na tela
+	mvwprintw(win,1,20,"Bem-vindo ao Play Music!");
+	mvwprintw(win,2,1,"--------------------------------------------------------------------------------------------------");
+	mvwprintw(win,5,20,"Vamos criar a sua Fila de Reprodução... Adicione as suas músicas a seguir!");
+	mvwprintw(win,7,20,"Você deve digitar o caminho para adicionar uma música.");
+	mvwprintw(win,8,20,"(Ex: /home/user/Music/).");
+	mvwprintw(win,9,20,"");
+	wrefresh(win);
+	//deslocamento do cursor
+	move(20,40);
 
-	int numLinhas, numColunas, y0, x0, y1, x1, y2, x2, y3, x3;
-
-    getmaxyx(stdscr, numLinhas, numColunas);
-
-    y0 = 0, x0 = 0;
-    y1 = numLinhas, x1 = numColunas;
-
-    WINDOW *win1 = newwin(y1, x1, y0, x0);
-    refresh();
-
-	string tip1 = "Você deve digitar o caminho para adicionar uma música.\n";
-	string tip2 = "(Ex: /home/user/Music/)."; 
-
-	mvwprintw(win1, 1, 0, tip1.c_str());
-	mvwprintw(win1, 2, 15, tip2.c_str());
-	
-	wrefresh(win1);
-	move(5, 0);
-
-	printw("> ");
-	char diretorio[100];
+	// Entrada de diretório do usuário
+	char diretorio[100]; 
 	getstr(diretorio);
 
 	dir = opendir(diretorio);
 
 	if(dir == NULL){
+		move(21,40);
 		printw("\nEsse diretório está vazio");
+		move(22,40);
 		exit(1);
 	}
 
@@ -111,29 +111,38 @@ int main(int argc, char const *argv[]){
 	}
 	closedir(dir);
 
-	move(0, 0);
-	y1 = numLinhas, x1 = numColunas;
-	win1 = newwin(y1, x1, y0, x0);
-	box(win1, '|', '*');
-	wrefresh(win1);
+	//iniciando a tela 2
+	WINDOW * win2 = newwin(height, width, start_y,start_x);
+	box(win2,0,0);
+	mvwprintw(win2,0,45,"Play Music");
+	//refresh na tela 2
+	wrefresh(win2);
 
-	move(2, 2);
-	printw("=-=-= Sua Playlist =-=-=\n");
+	//construindo o menu rodape do topo
+	mvwprintw(win2,1,1,"--------------------------------------------------------------------------------------------------");
+	mvwprintw(win2,2,20,"P Play | S Pause | R Resume | | N Next | B Back | | D Delete | E Exit "); // Representa o "Menu"
+	mvwprintw(win2,3,1,"--------------------------------------------------------------------------------------------------");
+	wrefresh(win2);
+	mvwprintw(win2,5,2,"=-=-= Sua Playlist =-=-=");
+	wrefresh(win2);
+
+	// Lista para o usuário quais as músicas na sua playlist
 	for (int i = 0; i < music; i++){
-		mvprintw(2 + 1 + i, 2, "%d - %s\n", (i+1), nomeMusicas[i]);
+		mvprintw(16 + 1 + i, 22, "%d - %s\n", (i+1), nomeMusicas[i]);
 	}
-	
-	refresh(); 
+	//deslocar o cursor
+	move(16,22);
+	//refresh na tela2
+	wrefresh(win2); 
 	
 	// Basicamente, enquanto for "True", leia chamadas do usuário
 	while(exec){
 		bool atual = true; // Controla o tempo de execução da música atual
 		int next;
-		int del;
 		int entrada = getch(); // Guarda o valor digitado pelo usuário
-
+		
 		switch(entrada){
-			case 'P':
+			case 'P': // Inicia a playlist de execução
 				playlistControl = music;
 				music = 0;
 
@@ -143,39 +152,38 @@ int main(int argc, char const *argv[]){
 
 				while(music < playlistControl){ // Enquanto houver música na fila de reprodução
 					
-					printw("O total de músicas é: %d\n", playlistControl);
-
+					// Não deixa músicas tocarem paralelamente após o Pause/Resume/Delete
 					if(next != 'S' && next != 'R' || next == 'Y'){
 						song = Mix_LoadWAV(playlist[music]); // Pega a música atual
 						Mix_PlayChannel(-1, song, 0);
 					}
 
-					next = getch(); // Usado para caso o usuário queira pula a música atual.
+					next = getch(); // Espera uma entrada do usuário.
 
 					if(next == 'B'){
 						if(music > 0){
+							music--; // Volta uma música	
 							Mix_FreeChunk(song);
-							music--; // vai para a próxima música	
 						}
 					}
 					else if(next == 'N'){
+						music++; // Avança uma música
 						Mix_FreeChunk(song);
-						music++; // vai para a próxima música
 					}
-					else if(next == 'S'){
+					else if(next == 'S'){ // Pause
 						if(Mix_Playing(-1)){
 							Mix_Pause(-1);
 						}
 					}
-					else if(next == 'R'){
+					else if(next == 'R'){ // Resume
 						if(Mix_Paused(-1)){
 							Mix_Resume(-1);
 						}
 					}
-					else if(next == 'D'){
+					else if(next == 'D'){ // Delete - Permite deletar uma música com a playlist em execução
 						char musicaDelete[100];
 						getstr(musicaDelete);
-
+						move(16,22);
 						for (int i = 0; i < playlistControl; i++){
 							if(strcmp(musicaDelete,nomeMusicas[i]) == 0){
 								
@@ -187,16 +195,13 @@ int main(int argc, char const *argv[]){
 								pthread_join(*threadDelete, NULL);
 							}
 						}
-
-						printw("=-=-= Sua Playlist =-=-=\n");
-						for (int i = 0; i < playlistControl; i++){
-							printw("%d - %s\n", (i+1), nomeMusicas[i]);
-						}
 					}
 				}
-		  		printw("\nSua playlist terminou. Se quiser recomeçar essa, pressione P.\nE se quiser sair, pressione E.");
+				//move o cursor
+				move(30,22);
+		  		printw("Sua playlist terminou. Se quiser recomeçar essa, pressione P. E se quiser sair, pressione E.");
 				break;
-			case 'D':
+			case 'D': // Delete - Antes da playlist começar
 				char musicaDelete[100];
 				getstr(musicaDelete);
 

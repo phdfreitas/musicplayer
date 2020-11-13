@@ -11,6 +11,9 @@
 #include <sys/types.h>
 #include <dirent.h>
 
+#include <time.h>
+#include <algorithm>
+
 using namespace std;
 
 // Configuração base para tocar as músicas
@@ -26,7 +29,6 @@ using namespace std;
 	int music = 0;
 	int playlistControl = 0;
 // Fim
-
 
 // Função que permite excluir uma música da playlist após a mesma já ter iniciado
 void *deleteSong(void *arg){
@@ -140,6 +142,13 @@ int main(int argc, char const *argv[]){
 		bool atual = true; // Controla o tempo de execução da música atual
 		int next;
 		int entrada = getch(); // Guarda o valor digitado pelo usuário
+
+		int i, j;
+		int arr[music];
+		int arrControl = 0;
+		int errControl = 0; 
+		int *verifica;
+		int musiControl = 0;
 		
 		switch(entrada){
 			case 'P': // Inicia a playlist de execução
@@ -196,6 +205,13 @@ int main(int argc, char const *argv[]){
 							}
 						}
 					}
+					else if(next == 'E'){
+						Mix_FreeChunk(song);
+						music = playlistControl;
+						exec = false;
+						refresh();
+						endwin();
+					}
 				}
 				//move o cursor
 				move(30,22);
@@ -220,12 +236,95 @@ int main(int argc, char const *argv[]){
 					printw("%d - %s\n", (i+1), nomeMusicas[i]);
 				}
 				break;
+			case 'L':
+				playlistControl = music;
+				music = 0;
+
+				for (i = 0; i < playlistControl; i++){
+					music = rand() % (playlistControl - i);
+					verifica = find(arr, arr+playlistControl, music);
+					if(verifica == arr+playlistControl){
+						arr[i] = music;
+						arrControl++;
+					}
+					else{
+						while(true){
+							music++;
+							verifica = find(arr, arr+playlistControl, music);
+							if(verifica == arr+playlistControl){
+								arr[i] = music;
+								arrControl++;
+								break;
+							}
+						}  
+					}
+				}
+				
+
+				SDL_Init(SDL_INIT_EVERYTHING); // Inicia a biblioteca de áudio
+		  	
+				Mix_OpenAudio(frequency, format, channel, buffer);
+
+				while(musiControl < arrControl){ // Enquanto houver música na fila de reprodução
+					
+					// Não deixa músicas tocarem paralelamente após o Pause/Resume/Delete
+					if(next != 'S' && next != 'R' || next == 'Y'){
+						song = Mix_LoadWAV(playlist[arr[musiControl]]); // Pega a música atual
+						Mix_PlayChannel(-1, song, 0);
+					}
+
+					next = getch(); // Espera uma entrada do usuário.
+
+					if(next == 'B'){
+						if(musiControl > 0){
+							musiControl--; // Volta uma música	
+							Mix_FreeChunk(song);
+						}
+					}
+					else if(next == 'N'){
+						musiControl++; // Avança uma música
+						Mix_FreeChunk(song);
+					}
+					else if(next == 'S'){ // Pause
+						if(Mix_Playing(-1)){
+							Mix_Pause(-1);
+						}
+					}
+					else if(next == 'R'){ // Resume
+						if(Mix_Paused(-1)){
+							Mix_Resume(-1);
+						}
+					}
+					else if(next == 'D'){ // Delete - Permite deletar uma música com a playlist em execução
+						char musicaDelete[100];
+						getstr(musicaDelete);
+						move(16,22);
+						for (int i = 0; i < arrControl; i++){
+							if(strcmp(musicaDelete,nomeMusicas[i]) == 0){
+								
+								Mix_FreeChunk(song);
+								if(i == music) music++;
+								
+								pthread_create(&threadDelete[0], NULL, deleteSong, playlist[i]);
+								pthread_create(&threadDelete[1], NULL, deleteSong, nomeMusicas[i]);
+								pthread_join(*threadDelete, NULL);
+							}
+						}
+					}
+					else if(next == 'E'){
+						Mix_FreeChunk(song);
+						music = playlistControl;
+						exec = false;
+						refresh();
+						endwin();
+					}
+				}
+				break;
 		  	case 'E': // Para sair do programa.
-		  	printw("Bye bye!\n");
-		  	exec = false;
-	    	refresh();
-			endwin();
-		  	break;
+				exec = false;
+				refresh();
+				endwin();
+				break;
 		}
 	}
 	return 0;

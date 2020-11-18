@@ -122,7 +122,7 @@ int main(int argc, char const *argv[]){
 
 	//construindo o menu rodape do topo
 	mvwprintw(win2,1,1,"--------------------------------------------------------------------------------------------------");
-	mvwprintw(win2,2,20,"P Play | S Pause | R Resume | | N Next | B Back | | D Delete | E Exit "); // Representa o "Menu"
+	mvwprintw(win2,2,10,"P Play | S Pause | R Resume | | N Next | B Back | | L Aleatório | | D Delete | E Exit "); // Representa o "Menu"
 	mvwprintw(win2,3,1,"--------------------------------------------------------------------------------------------------");
 	wrefresh(win2);
 	mvwprintw(win2,5,2,"=-=-= Sua Playlist =-=-=");

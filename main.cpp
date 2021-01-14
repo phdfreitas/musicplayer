@@ -30,7 +30,7 @@ using namespace std;
 	int playlistControl = 0;
 // Fim
 
-// Função que permite excluir uma música da playlist após a mesma já ter iniciado
+// Função que permite excluir uma música da playlist mesmo com a playlist tocando.
 void *deleteSong(void *arg){
 	char * toDelete = (char *)arg;
 	strcpy(toDelete, "");
@@ -39,10 +39,11 @@ void *deleteSong(void *arg){
 
 int main(int argc, char const *argv[]){
 	
+	// **OBS: Essa não é a melhor maneira de se guardar as músicas
 	char playlist[1000][1000]; // Guarda o caminho completo da música
 	char nomeMusicas[1000][1000]; // Guarda o nome da música (Fins de retorno ao usuário)
 
-	pthread_t threadDelete[2]; // Usaremos para pode excluir a música enquanto a playlist rola	
+	pthread_t threadDelete[2]; // Usaremos para pode excluir a música enquanto a playlist toca
 	
 	// Nos permite pegar todos os arquivos de um diretório
 	DIR *dir;
@@ -52,7 +53,7 @@ int main(int argc, char const *argv[]){
 	initscr();
 	//tamanho das telas
 	int height,width,start_y,start_x;
-	height=30;
+	height=25;
 	width=100;
 	start_y = 10;
 	start_x = 20;
@@ -62,19 +63,17 @@ int main(int argc, char const *argv[]){
 	refresh();
 	//adicionando uma borda
 	box(win,0,0);
-	mvwprintw(win,0,45,"Play Music");
+	mvwprintw(win,0,46,"Play Music");
 	//refresh na tela win1
 	wrefresh(win);
 	//printar na tela
-	mvwprintw(win,1,20,"Bem-vindo ao Play Music!");
+	mvwprintw(win,1,39,"Bem-vindo ao Play Music!");
 	mvwprintw(win,2,1,"--------------------------------------------------------------------------------------------------");
-	mvwprintw(win,5,20,"Vamos criar a sua Fila de Reprodução... Adicione as suas músicas a seguir!");
-	mvwprintw(win,7,20,"Você deve digitar o caminho para adicionar uma música.");
-	mvwprintw(win,8,20,"(Ex: /home/user/Music/).");
-	mvwprintw(win,9,20,"");
+	mvwprintw(win,3,15,"Vamos criar a sua Fila de Reprodução... Adicione as suas músicas a seguir!");
+	mvwprintw(win,4,13,"Você deve digitar o caminho para adicionar uma música. (Ex: /home/user/Music/).");
 	wrefresh(win);
 	//deslocamento do cursor
-	move(20,40);
+	move(15,33);
 
 	// Entrada de diretório do usuário
 	char diretorio[100]; 
@@ -116,13 +115,13 @@ int main(int argc, char const *argv[]){
 	//iniciando a tela 2
 	WINDOW * win2 = newwin(height, width, start_y,start_x);
 	box(win2,0,0);
-	mvwprintw(win2,0,45,"Play Music");
+	mvwprintw(win2,0,46,"Play Music");
 	//refresh na tela 2
 	wrefresh(win2);
 
 	//construindo o menu rodape do topo
 	mvwprintw(win2,1,1,"--------------------------------------------------------------------------------------------------");
-	mvwprintw(win2,2,10,"P Play | S Pause | R Resume | | N Next | B Back | | L Aleatório | | D Delete | E Exit "); // Representa o "Menu"
+	mvwprintw(win2,2,10,"P Play | S Pause | R Resume | | N Next | B Back | | L Shuffle | | D Delete | E Exit "); // Representa o "Menu"
 	mvwprintw(win2,3,1,"--------------------------------------------------------------------------------------------------");
 	wrefresh(win2);
 	mvwprintw(win2,5,2,"=-=-= Sua Playlist =-=-=");

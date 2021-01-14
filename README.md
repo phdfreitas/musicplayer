@@ -2,13 +2,15 @@
 Primeiro projeto da disciplina Infraestrutura de Software - IF677.
 
 ### Proposta
-Criar um programa concorrente que simula um player de música básico e que pode ser operado por linha de comando.
+Criar um programa concorrente que simule um player de música simples e execute em linha de comando.
 
 ### Funcionalidades
 
 - [x] Criar uma playlist.
-- [x] Remover músicas da playlist criada.
-- [x] Avançar/Pular músicas
+- [x] Play/Pause a playlist.
+- [x] Avançar/Voltar músicas.
+- [x] Modo aleatório.
+- [x] Remover músicas da playlist.
 - [x] Ouvir a playlist
 
 ### Pré-requisitos
@@ -32,5 +34,5 @@ Criar um programa concorrente que simula um player de música básico e que pode
 
 ### Restrições/Observações
 - O programa só executa músicas .wav
-- O programa foi testado no Ubuntu 18.04
+- O programa foi testado apenas no Ubuntu 18.04
 - Ainda há correções a serem feitas quanto a execução de uma playlist, no entanto, caso uma música termine e a outra não comece de imediato, basta pressionar "N".
